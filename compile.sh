@@ -114,7 +114,18 @@ compile() {
         done
     fi
 
-    # TODO: add Java and C++
+    # C++
+    cpp_srcs=`find .. -name \*.cpp`
+    if [ ! -z "$cpp_srcs"]; then
+        mkdir Cpp/ Cpp/bin
+        for cpp in ${cpp_srcs}
+        do
+            mv ${cpp} Cpp/
+        done
+        g++ -g -std=c++11 `ls ./Cpp/*.cpp` -o ./Cpp/bin/Program
+    fi
+    
+    # TODO: add Java (consider the packages)
 }
 
 # Decompress each tarball to its coresponding folder
