@@ -1,19 +1,44 @@
 #!/bin/bash
+
 # Organize source files into different folders and compile each one of them
 # The organized files are moved into the "Generated" folder
+
+# Test case file location
+# Specifying value of k and n respectively (splitted by a space)
+testcasesfile=../../testcases
 
 compile() {
     # Ada
     ada_srcs=`find .. -name \*.adb`
     if [ ! -z "$ada_srcs" ]; then
+        # create a new file for results
+        touch ../RESULT_ADA.txt
+
+        # a counter keep track of number of test cases passed
+        passed=0
         mkdir Ada/ Ada/bin/ Ada/obj/
         for ada_src in ${ada_srcs}
         do
             mv ${ada_src} Ada/
         done
+
         # Assume there is only one main function in total
         # Compile ada sources
         gnatmake -D ./Ada/obj/ -o ./Ada/bin/Program `ls Ada/*.adb`
+
+        while read LINE
+        do
+            # save results for each test cases
+            ./Ada/bin/Program $LINE > "res_${LINE// /-}"
+            # compare it with answer key
+            if [[ `diff -B res_${LINE// /-} ../../ANSWER_KEY/ans_${LINE// /-}`=="" ]] || [[ `diff -B res_${LINE// /-} ../../ANSWER_KEY/ans_${LINE// /-}_rev`=="" ]] ; then
+                # passed the test case
+                passed=$((passed+1))
+                # append result to result file
+                echo "Case: ${LINE// /-} passed" >> ../RESULT_ADA.txt
+            fi
+        done < "$testcasesfile"
+        echo "Total number of passed cases: $passed" >> ../RESULT_ADA.txt
     fi
 
     # C-sharp
@@ -124,21 +149,34 @@ compile() {
         done
         g++ -g -std=c++11 `ls ./Cpp/*.cpp` -o ./Cpp/bin/Program
     fi
-    
-    # TODO: add Java (consider the packages)
+
+    # TODO: add Java
+
 }
+
+# compile the answer key program
+gcc -o csc254_a1 ./csc254_a1.c
+
+# execute the c program for generating answer key
+mkdir ANSWER_KEY/
+while read LINE
+do
+    ./csc254_a1 $LINE > "./ANSWER_KEY/ans_${LINE// /-}"
+    # reverse the order
+    tac "./ANSWER_KEY/ans_${LINE// /-}" > "./ANSWER_KEY/ans_${LINE// /-}_rev"
+done < ./testcases
 
 # Decompress each tarball to its coresponding folder
 tarballs=`find . -maxdepth 1 -name \*.tar.gz`
 if [ ! -z "$tarballs" ]; then
     for tarball in `ls *.tar.gz`
     do
+        echo $tarball
         mkdir ${tarball%%.*}/
         mkdir ${tarball%%.*}/Generated/
-        tar -xvzf ${tarball} ${tarball%%.*}/
+        tar -xf ${tarball} ${tarball%%.*}/
         cd ${tarball%%.*}/Generated/
         compile
-        # TODO: execute the programs and compare results
         cd -
     done
 else
