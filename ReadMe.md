@@ -11,11 +11,10 @@
     ├── <tarball>.tar.gz
     ├── compile.sh
     ├── csc254_a1.c
-    ├── csc254_a1
     ├── ReadMe.md
     └── testcases
 
     ```
 - specify testcases in `./testcases`
-- `./compile.sh`
+- `./grade.sh`
 - There should be RESULT files generated for grading
